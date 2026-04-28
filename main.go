@@ -1,31 +1,58 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/alfonso/go-laravelcloud/internal/handlers"
+	"github.com/alfonso/go-laravelcloud/internal/middleware"
 )
 
-const addr = ":9114"
-
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /hello", helloHandler)
-
-	log.Printf("listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
-		log.Fatal(err)
+	addr := os.Getenv("ADDR")
+	if addr == "" {
+		addr = ":9114"
 	}
-}
 
-// helloHandler responds to GET /hello with a "hello world" payload.
-//
-// TODO: implement the response. Decisions to make:
-//   - Plain text ("hello world") vs JSON ({"message": "hello world"})?
-//   - Set Content-Type header explicitly?
-//   - Any status code other than 200?
-//
-// JSON is more conventional for an API and easier for clients to parse;
-// plain text is simpler and avoids importing encoding/json.
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO(you): write 3-5 lines here
+	mux := http.NewServeMux()
+	handlers.Register(mux)
+
+	chain := middleware.Chain(
+		middleware.Recovery,
+		middleware.Logging,
+		middleware.RequestID,
+	)
+
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           chain(mux),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	go func() {
+		log.Printf("listening on %s", addr)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("server failed: %v", err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
+	log.Println("shutting down...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("shutdown error: %v", err)
+	}
 }
