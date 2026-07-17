@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/alfonso/go-laravelcloud/internal/middleware"
+	"github.com/alfonso/go-laravelcloud/internal/models"
 )
 
 func JSON(w http.ResponseWriter, status int, body any) {
@@ -14,10 +17,11 @@ func JSON(w http.ResponseWriter, status int, body any) {
 	}
 }
 
-func Error(w http.ResponseWriter, status int, msg string) {
-	JSON(w, status, map[string]any{
-		"error":  http.StatusText(status),
-		"detail": msg,
-		"status": status,
+func Error(w http.ResponseWriter, r *http.Request, status int, detail string) {
+	JSON(w, status, models.APIError{
+		Error:     http.StatusText(status),
+		Detail:    detail,
+		Status:    status,
+		RequestID: middleware.RequestIDFrom(r.Context()),
 	})
 }

@@ -11,7 +11,7 @@ import (
 func Echo(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
 	if err != nil {
-		respond.Error(w, http.StatusBadRequest, "could not read body")
+		respond.Error(w, r, http.StatusBadRequest, "could not read body")
 		return
 	}
 	defer r.Body.Close()

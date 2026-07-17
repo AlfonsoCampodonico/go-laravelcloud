@@ -1,3 +1,4 @@
+// main.go
 package main
 
 import (
@@ -12,23 +13,21 @@ import (
 
 	"github.com/alfonso/go-laravelcloud/internal/handlers"
 	"github.com/alfonso/go-laravelcloud/internal/middleware"
+	"github.com/alfonso/go-laravelcloud/internal/store"
 )
 
 func main() {
-	addr := os.Getenv("ADDR")
-	if addr == "" {
-		addr = ":9114"
-	}
-
 	mux := http.NewServeMux()
-	handlers.Register(mux)
+	handlers.Register(mux, store.NewMemoryStore())
 
 	chain := middleware.Chain(
 		middleware.Recovery,
-		middleware.Logging,
 		middleware.RequestID,
+		middleware.CORS,
+		middleware.Logging,
 	)
 
+	addr := resolveAddr()
 	srv := &http.Server{
 		Addr:              addr,
 		Handler:           chain(mux),
@@ -55,4 +54,15 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("shutdown error: %v", err)
 	}
+}
+
+// resolveAddr prefers the platform-injected PORT, then ADDR, then a default.
+func resolveAddr() string {
+	if p := os.Getenv("PORT"); p != "" {
+		return ":" + p
+	}
+	if a := os.Getenv("ADDR"); a != "" {
+		return a
+	}
+	return ":9114"
 }
