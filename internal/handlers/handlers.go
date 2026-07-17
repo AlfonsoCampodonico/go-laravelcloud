@@ -44,7 +44,9 @@ func Register(mux *http.ServeMux, st store.Store) {
 	for _, rt := range Routes(st) {
 		mux.HandleFunc(rt.Method+" "+rt.Pattern, rt.Handler)
 	}
-	// Swagger UI is a subtree (serves index.html + static assets); register
-	// separately. ServeMux auto-redirects GET /docs -> GET /docs/.
+	// Swagger UI is a static-file subtree served under /docs/. It is registered
+	// directly (not via Routes) because it is not a single method+path handler,
+	// so it is intentionally NOT enumerated by Routes() or checked by the
+	// contract test. ServeMux auto-redirects GET /docs -> GET /docs/.
 	mux.Handle("GET /docs/", DocsUI())
 }

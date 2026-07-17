@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/alfonso/go-laravelcloud/internal/models"
 	"github.com/alfonso/go-laravelcloud/internal/respond"
@@ -56,7 +57,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	u, err := h.Store.Create(r.Context(), models.User{Name: in.Name, Email: in.Email})
+	u, err := h.Store.Create(r.Context(), models.User{Name: strings.TrimSpace(in.Name), Email: in.Email})
 	if err != nil {
 		respond.Error(w, r, http.StatusInternalServerError, "failed to create user")
 		return
@@ -73,7 +74,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	u, err := h.Store.Update(r.Context(), id, models.User{Name: in.Name, Email: in.Email})
+	u, err := h.Store.Update(r.Context(), id, models.User{Name: strings.TrimSpace(in.Name), Email: in.Email})
 	if errors.Is(err, store.ErrNotFound) {
 		respond.Error(w, r, http.StatusNotFound, "user not found")
 		return

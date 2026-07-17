@@ -85,6 +85,22 @@ func TestUsers_Create_Invalid(t *testing.T) {
 	}
 }
 
+func TestUsers_Create_TrimsName(t *testing.T) {
+	h := newUserHandler()
+	req := httptest.NewRequest(http.MethodPost, "/users", strings.NewReader(`{"name":"  Bob  ","email":"bob@example.com"}`))
+	rec := httptest.NewRecorder()
+	h.Create(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want 201", rec.Code)
+	}
+	var u models.User
+	_ = json.NewDecoder(rec.Body).Decode(&u)
+	if u.Name != "Bob" {
+		t.Fatalf("stored name = %q, want %q (should be trimmed)", u.Name, "Bob")
+	}
+}
+
 func TestUsers_Update(t *testing.T) {
 	h := newUserHandler()
 	req := httptest.NewRequest(http.MethodPut, "/users/1", strings.NewReader(`{"name":"Ada L","email":"ada2@example.com"}`))
