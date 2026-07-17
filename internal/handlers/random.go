@@ -30,7 +30,7 @@ func Random(w http.ResponseWriter, r *http.Request) {
 	}
 	buf := make([]byte, n)
 	if _, err := crand.Read(buf); err != nil {
-		respond.Error(w, http.StatusInternalServerError, "failed to read random bytes")
+		respond.Error(w, r, http.StatusInternalServerError, "failed to read random bytes")
 		return
 	}
 	respond.JSON(w, http.StatusOK, map[string]any{
