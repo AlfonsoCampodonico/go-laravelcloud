@@ -37,19 +37,23 @@ internal/
   store/                       # NEW: Store interface + in-memory implementation
   respond/                     # JSON + structured error helpers
 api/
-  openapi.yaml                 # NEW: hand-written OpenAPI 3.1 spec (source of truth)
+  openapi.json                 # NEW: hand-written OpenAPI 3.1 spec (source of truth)
   swagger-ui/                  # NEW: vendored Swagger UI static assets (embedded)
 ```
 
 ### OpenAPI approach: spec-first, hand-written, embedded
 
-- `api/openapi.yaml` is the source of truth, written by hand as OpenAPI 3.1.
+- `api/openapi.json` is the source of truth, written by hand as OpenAPI 3.1.
 - Embedded into the binary with `go:embed`.
-- `GET /openapi.yaml` serves the raw spec (content-type `application/yaml`).
-- `GET /docs` serves an embedded Swagger UI configured to load `/openapi.yaml`.
-- A **contract test** asserts every route registered in `handlers.Register` has a
+- `GET /openapi.json` serves the raw spec (content-type `application/json`).
+- `GET /docs` serves an embedded Swagger UI configured to load `/openapi.json`.
+- A **contract test** asserts every route registered by the handlers has a
   matching `path + method` in the spec, and vice versa. This catches drift
   without the ceremony of code generation.
+- **Spec is JSON, not YAML,** so the contract test parses it with stdlib
+  `encoding/json` and `go.mod` keeps **zero third-party dependencies** — a
+  stronger "showcase Go" story than adding a YAML library. Swagger UI loads
+  JSON natively.
 
 Rejected alternative: `oapi-codegen` (spec-first typed codegen). It gives
 compile-time contract enforcement but restructures handlers and adds a build
