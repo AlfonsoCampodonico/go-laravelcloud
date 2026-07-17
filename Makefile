@@ -1,4 +1,4 @@
-.PHONY: run build test fmt vet tidy docker clean
+.PHONY: run build test fmt vet tidy docker clean smoke
 
 run:
 	go run .
@@ -23,3 +23,9 @@ docker:
 
 clean:
 	rm -rf bin
+
+smoke:
+	@PORT=9114 go run . & echo $$! > /tmp/golc.pid; sleep 1; \
+	curl -s -o /dev/null -w "GET /openapi.json -> %{http_code}\n" localhost:9114/openapi.json; \
+	curl -s -o /dev/null -w "GET /docs/ -> %{http_code}\n" localhost:9114/docs/; \
+	kill `cat /tmp/golc.pid`
