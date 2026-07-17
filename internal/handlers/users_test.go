@@ -128,3 +128,40 @@ func TestUsers_Delete(t *testing.T) {
 		t.Fatalf("status = %d, want 204", rec.Code)
 	}
 }
+
+func TestUsers_Update_NotFound(t *testing.T) {
+	h := newUserHandler()
+	req := httptest.NewRequest(http.MethodPut, "/users/9999", strings.NewReader(`{"name":"X","email":"x@example.com"}`))
+	req.SetPathValue("id", "9999")
+	rec := httptest.NewRecorder()
+	h.Update(rec, req)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404", rec.Code)
+	}
+}
+
+func TestUsers_Delete_NotFound(t *testing.T) {
+	h := newUserHandler()
+	req := httptest.NewRequest(http.MethodDelete, "/users/9999", nil)
+	req.SetPathValue("id", "9999")
+	rec := httptest.NewRecorder()
+	h.Delete(rec, req)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404", rec.Code)
+	}
+}
+
+func TestUsers_Create_CanonicalizesEmail(t *testing.T) {
+	h := newUserHandler()
+	req := httptest.NewRequest(http.MethodPost, "/users", strings.NewReader(`{"name":"Bob","email":"Bob <bob@example.com>"}`))
+	rec := httptest.NewRecorder()
+	h.Create(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want 201", rec.Code)
+	}
+	var u models.User
+	_ = json.NewDecoder(rec.Body).Decode(&u)
+	if u.Email != "bob@example.com" {
+		t.Fatalf("stored email = %q, want %q", u.Email, "bob@example.com")
+	}
+}

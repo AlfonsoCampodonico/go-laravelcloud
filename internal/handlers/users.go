@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/mail"
 	"strconv"
 	"strings"
 
@@ -57,7 +58,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	u, err := h.Store.Create(r.Context(), models.User{Name: strings.TrimSpace(in.Name), Email: in.Email})
+	u, err := h.Store.Create(r.Context(), models.User{Name: in.Name, Email: in.Email})
 	if err != nil {
 		respond.Error(w, r, http.StatusInternalServerError, "failed to create user")
 		return
@@ -74,7 +75,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	u, err := h.Store.Update(r.Context(), id, models.User{Name: strings.TrimSpace(in.Name), Email: in.Email})
+	u, err := h.Store.Update(r.Context(), id, models.User{Name: in.Name, Email: in.Email})
 	if errors.Is(err, store.ErrNotFound) {
 		respond.Error(w, r, http.StatusNotFound, "user not found")
 		return
@@ -113,6 +114,7 @@ func parseID(w http.ResponseWriter, r *http.Request) (int, bool) {
 }
 
 func decodeUserInput(w http.ResponseWriter, r *http.Request) (models.UserInput, bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var in models.UserInput
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		respond.Error(w, r, http.StatusBadRequest, "invalid json body")
@@ -121,6 +123,10 @@ func decodeUserInput(w http.ResponseWriter, r *http.Request) (models.UserInput, 
 	if err := in.Validate(); err != nil {
 		respond.Error(w, r, http.StatusBadRequest, err.Error())
 		return in, false
+	}
+	in.Name = strings.TrimSpace(in.Name)
+	if addr, err := mail.ParseAddress(in.Email); err == nil {
+		in.Email = addr.Address
 	}
 	return in, true
 }
