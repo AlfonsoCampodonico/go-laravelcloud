@@ -47,6 +47,9 @@ func (s *MemoryStore) List(_ context.Context, q string, limit, offset int) ([]mo
 	sort.Slice(matches, func(i, j int) bool { return matches[i].ID < matches[j].ID })
 	total := len(matches)
 
+	if offset < 0 {
+		offset = 0
+	}
 	if offset > total {
 		offset = total
 	}

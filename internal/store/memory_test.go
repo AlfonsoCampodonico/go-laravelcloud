@@ -85,3 +85,10 @@ func TestMemoryStore_UpdateMissing(t *testing.T) {
 		t.Fatalf("Update missing = %v, want ErrNotFound", err)
 	}
 }
+
+func TestMemoryStore_DeleteMissing(t *testing.T) {
+	s := NewMemoryStore()
+	if err := s.Delete(context.Background(), 9999); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("Delete missing = %v, want ErrNotFound", err)
+	}
+}
