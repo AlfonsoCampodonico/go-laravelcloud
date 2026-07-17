@@ -1,0 +1,172 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "go-laravelcloud API",
+    "version": "1.0.0",
+    "description": "A stdlib-only Go REST API showcasing Go on Laravel Cloud. Spec and Swagger UI are embedded in the binary."
+  },
+  "servers": [{ "url": "/", "description": "This server" }],
+  "paths": {
+    "/hello": {
+      "get": {
+        "summary": "Greet a name",
+        "parameters": [
+          { "name": "name", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Greeting", "content": { "application/json": { "schema": { "type": "object", "properties": { "message": { "type": "string" } } } } } } }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": { "200": { "description": "Service healthy", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" }, "uptime_sec": { "type": "integer" } } } } } } }
+      }
+    },
+    "/version": {
+      "get": {
+        "summary": "Build and runtime version info",
+        "responses": { "200": { "description": "Version info", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/time": {
+      "get": {
+        "summary": "Current server time",
+        "responses": { "200": { "description": "Time info", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/random": {
+      "get": {
+        "summary": "Random values",
+        "parameters": [
+          { "name": "bytes", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 1024 } }
+        ],
+        "responses": { "200": { "description": "Random data", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/quote": {
+      "get": {
+        "summary": "Random programming quote",
+        "responses": { "200": { "description": "A quote", "content": { "application/json": { "schema": { "type": "object", "properties": { "quote": { "type": "string" } } } } } } }
+      }
+    },
+    "/echo": {
+      "post": {
+        "summary": "Echo the request back",
+        "requestBody": { "required": false, "content": { "application/json": { "schema": { "type": "object" } } } },
+        "responses": { "200": { "description": "Echoed request", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "List users",
+        "parameters": [
+          { "name": "q", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Case-insensitive filter over name and email" },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 } },
+          { "name": "offset", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 0, "default": 0 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of users",
+            "content": { "application/json": { "schema": {
+              "type": "object",
+              "properties": {
+                "users": { "type": "array", "items": { "$ref": "#/components/schemas/User" } },
+                "count": { "type": "integer" },
+                "limit": { "type": "integer" },
+                "offset": { "type": "integer" }
+              }
+            } } }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a user",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserInput" } } } },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "summary": "Get a user by ID",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "The user", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "summary": "Update a user",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserInput" } } } },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a user",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/panic": {
+      "get": {
+        "summary": "Trigger a panic (demonstrates recovery middleware)",
+        "responses": { "500": { "$ref": "#/components/responses/ServerError" } }
+      }
+    },
+    "/slow": {
+      "get": {
+        "summary": "Slow response (demonstrates timeouts / cancellation)",
+        "parameters": [{ "name": "ms", "in": "query", "required": false, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Slept", "content": { "application/json": { "schema": { "type": "object", "properties": { "slept_ms": { "type": "integer" } } } } } } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "created_at": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "name", "email", "created_at"]
+      },
+      "UserInput": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "email": { "type": "string", "format": "email" }
+        },
+        "required": ["name", "email"]
+      },
+      "APIError": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "detail": { "type": "string" },
+          "status": { "type": "integer" },
+          "request_id": { "type": "string" }
+        },
+        "required": ["error", "detail", "status"]
+      }
+    },
+    "responses": {
+      "BadRequest": { "description": "Invalid request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/APIError" } } } },
+      "NotFound": { "description": "Resource not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/APIError" } } } },
+      "ServerError": { "description": "Internal server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/APIError" } } } }
+    }
+  }
+}

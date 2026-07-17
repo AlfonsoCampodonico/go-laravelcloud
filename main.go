@@ -12,6 +12,7 @@ import (
 
 	"github.com/alfonso/go-laravelcloud/internal/handlers"
 	"github.com/alfonso/go-laravelcloud/internal/middleware"
+	"github.com/alfonso/go-laravelcloud/internal/store"
 )
 
 func main() {
@@ -21,7 +22,8 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	handlers.Register(mux)
+	st := store.NewMemoryStore()
+	handlers.Register(mux, st)
 
 	chain := middleware.Chain(
 		middleware.Recovery,
