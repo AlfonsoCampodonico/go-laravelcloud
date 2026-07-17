@@ -176,6 +176,8 @@ import (
 	"context"
 	"errors"
 	"testing"
+
+	"github.com/alfonso/go-laravelcloud/internal/models"
 )
 
 func TestMemoryStore_CRUD(t *testing.T) {
@@ -193,7 +195,7 @@ func TestMemoryStore_CRUD(t *testing.T) {
 		t.Fatalf("List not sorted by ID ascending: %v", all)
 	}
 
-	created, err := s.Create(ctx, User{}.fromInput("Linus", "linus@example.com"))
+	created, err := s.Create(ctx, models.User{Name: "Linus", Email: "linus@example.com"})
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -206,7 +208,7 @@ func TestMemoryStore_CRUD(t *testing.T) {
 		t.Fatalf("Get: %+v err=%v", got, err)
 	}
 
-	updated, err := s.Update(ctx, created.ID, User{Name: "Linus T", Email: "lt@example.com"})
+	updated, err := s.Update(ctx, created.ID, models.User{Name: "Linus T", Email: "lt@example.com"})
 	if err != nil {
 		t.Fatalf("Update: %v", err)
 	}
@@ -250,22 +252,10 @@ func TestMemoryStore_FilterAndPaginate(t *testing.T) {
 
 func TestMemoryStore_UpdateMissing(t *testing.T) {
 	s := NewMemoryStore()
-	if _, err := s.Update(context.Background(), 9999, User{Name: "x", Email: "x@x.com"}); !errors.Is(err, ErrNotFound) {
+	if _, err := s.Update(context.Background(), 9999, models.User{Name: "x", Email: "x@x.com"}); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("Update missing = %v, want ErrNotFound", err)
 	}
 }
-
-// test helper to build a User from name/email without exporting internals
-func (User) fromInput(name, email string) User { return User{Name: name, Email: email} }
-```
-
-Note: the test imports `models.User` indirectly — the store test uses the `store` package's own view. Since `Store` deals in `models.User`, add this alias at top of the test file if the compiler needs it:
-
-```go
-// add to memory_test.go imports/aliases
-import "github.com/alfonso/go-laravelcloud/internal/models"
-
-type User = models.User
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
