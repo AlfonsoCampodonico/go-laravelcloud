@@ -22,9 +22,9 @@ func main() {
 
 	chain := middleware.Chain(
 		middleware.Recovery,
+		middleware.RequestID,
 		middleware.CORS,
 		middleware.Logging,
-		middleware.RequestID,
 	)
 
 	addr := resolveAddr()
