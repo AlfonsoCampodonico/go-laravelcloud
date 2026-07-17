@@ -17,6 +17,12 @@ func TestCORS_SetsHeaders(t *testing.T) {
 	if got := rec.Header().Get("Access-Control-Allow-Origin"); got != "*" {
 		t.Fatalf("ACAO = %q, want *", got)
 	}
+	if got := rec.Header().Get("Access-Control-Allow-Methods"); got != "GET, POST, PUT, DELETE, OPTIONS" {
+		t.Fatalf("ACAM = %q, want 'GET, POST, PUT, DELETE, OPTIONS'", got)
+	}
+	if got := rec.Header().Get("Access-Control-Allow-Headers"); got != "Content-Type, X-Request-ID" {
+		t.Fatalf("ACAH = %q, want 'Content-Type, X-Request-ID'", got)
+	}
 }
 
 func TestCORS_PreflightShortCircuits(t *testing.T) {
