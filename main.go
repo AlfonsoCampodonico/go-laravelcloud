@@ -1,3 +1,4 @@
+// main.go
 package main
 
 import (
@@ -16,21 +17,17 @@ import (
 )
 
 func main() {
-	addr := os.Getenv("ADDR")
-	if addr == "" {
-		addr = ":9114"
-	}
-
 	mux := http.NewServeMux()
-	st := store.NewMemoryStore()
-	handlers.Register(mux, st)
+	handlers.Register(mux, store.NewMemoryStore())
 
 	chain := middleware.Chain(
 		middleware.Recovery,
+		middleware.CORS,
 		middleware.Logging,
 		middleware.RequestID,
 	)
 
+	addr := resolveAddr()
 	srv := &http.Server{
 		Addr:              addr,
 		Handler:           chain(mux),
@@ -57,4 +54,15 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("shutdown error: %v", err)
 	}
+}
+
+// resolveAddr prefers the platform-injected PORT, then ADDR, then a default.
+func resolveAddr() string {
+	if p := os.Getenv("PORT"); p != "" {
+		return ":" + p
+	}
+	if a := os.Getenv("ADDR"); a != "" {
+		return a
+	}
+	return ":9114"
 }
