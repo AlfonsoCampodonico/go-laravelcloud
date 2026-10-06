@@ -44,6 +44,19 @@ func main() {
 		}
 	}()
 
+	// A separate management listener for health checks that target their own
+	// port. A bare ":port" listens on IPv4 and IPv6, which Laravel Cloud's
+	// IPv6 pod network needs.
+	healthAddr := ":" + envOr("HEALTH_PORT", "9090")
+	healthMux := http.NewServeMux()
+	healthMux.HandleFunc("GET /health", handlers.Health)
+	go func() {
+		log.Printf("health listening on %s", healthAddr)
+		if err := http.ListenAndServe(healthAddr, healthMux); err != nil {
+			log.Printf("health server failed: %v", err)
+		}
+	}()
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
@@ -65,4 +78,11 @@ func resolveAddr() string {
 		return a
 	}
 	return ":9114"
+}
+
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }
